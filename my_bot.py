@@ -1,12 +1,12 @@
+import os
 import telebot # Library import ki
 import datetime # date import ke liye 
 import random
 import wikipedia
-import os
 import yt_dlp
 
 # Step 1 wala Token yaha daalo (quotes ke andar)
-TOKEN = "8388655128:AAGhp-zvoMEGX8FJ2zpU6g4QrghHQOdVokU"
+TOKEN = os.environ.get('MY_TOKEN')
 
 bot = telebot.TeleBot(TOKEN)
 
