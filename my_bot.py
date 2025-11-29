@@ -19,7 +19,7 @@ def send_welcome(message):
     btn1 = telebot.types.KeyboardButton('Toss')
     btn2 = telebot.types.KeyboardButton('Password')
     btn3 = telebot.types.KeyboardButton('Date')
-    btn4 = telebot.types.KeyboardButton('wiki India')
+    btn4 = telebot.types.KeyboardButton('wiki python')
     
     markup.add(btn1, btn2, btn3, btn4)
     
@@ -130,3 +130,4 @@ def keep_alive():
 print("Bot start ho raha hai...")
 keep_alive()  # <--- Ye line engine start karegi (Most Important)
 bot.infinity_polling()
+
