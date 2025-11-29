@@ -15,7 +15,7 @@ bot = telebot.TeleBot(TOKEN)
 # --- AI SETUP (Google Gemini) ---
 GEMINI_KEY = os.environ.get('GEMINI_KEY')
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-1.0-pro') # Ye fast aur free model hai
+model = genai.GenerativeModel('gemini-2.5-flash') # Ye fast aur free model hai
 
 # --- 1. START COMMAND (BUTTONS) ---
 @bot.message_handler(commands=['start'])
@@ -121,6 +121,7 @@ def keep_alive():
 print("Bot start ho raha hai...")
 keep_alive()
 bot.infinity_polling()
+
 
 
 
