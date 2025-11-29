@@ -3,4 +3,5 @@ yt-dlp
 wikipedia
 lxml
 flask
+google-generativeai
 
