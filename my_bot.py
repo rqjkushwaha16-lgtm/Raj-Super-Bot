@@ -6,24 +6,27 @@ import datetime
 import random
 import wikipedia
 import yt_dlp
+import google.generativeai as genai  # <--- NEW: AI Library
 
 # --- SETUP ---
 TOKEN = os.environ.get('MY_TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
+# --- AI SETUP (Google Gemini) ---
+GEMINI_KEY = os.environ.get('GEMINI_KEY')
+genai.configure(api_key=GEMINI_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash') # Ye fast aur free model hai
+
 # --- 1. START COMMAND (BUTTONS) ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    
     btn1 = telebot.types.KeyboardButton('Toss')
     btn2 = telebot.types.KeyboardButton('Password')
     btn3 = telebot.types.KeyboardButton('Date')
-    btn4 = telebot.types.KeyboardButton('wiki python')
-    
+    btn4 = telebot.types.KeyboardButton('wiki India')
     markup.add(btn1, btn2, btn3, btn4)
-    
-    bot.reply_to(message, "Namaste Raj! Main taiyaar hu. Niche buttons se option chuno:", reply_markup=markup)
+    bot.reply_to(message, "Namaste Raj! Main AI Bot hu. Mujhse kuch bhi pucho!", reply_markup=markup)
 
 # --- 2. MAIN LOGIC (AUTO REPLY) ---
 @bot.message_handler(func=lambda message: True)
@@ -52,22 +55,15 @@ def auto_reply(message):
         my_password = ""
         for i in range(12):
             my_password += random.choice(chars)
-        
         bot.reply_to(message, "Ye lo apka strong password: " + my_password)
-        bot.reply_to(message, "(Isse yaad kar lena, main save nahi rakhta!)")
 
     # --- Wikipedia Feature ---
     elif "wiki" in user_text:
         query = user_text.replace("wiki", "").strip().title()
         bot.reply_to(message, "Wikipedia par dhund raha hu... 🔍")
-        
         try:
             result = wikipedia.summary(query, sentences=2)
             bot.reply_to(message, result)
-        except wikipedia.exceptions.DisambiguationError:
-            bot.reply_to(message, "Thoda confusion hai. Specific likho (Jaise: 'India Country').")
-        except wikipedia.exceptions.PageError:
-            bot.reply_to(message, "Ye topic nahi mila. Spelling check karo!")
         except Exception as e:
             bot.reply_to(message, "Error aaya: " + str(e))
 
@@ -75,7 +71,6 @@ def auto_reply(message):
     elif "youtube.com" in user_text or "youtu.be" in user_text:
         url = message.text
         bot.reply_to(message, "Video mil gaya! Download kar raha hu... ⏳")
-
         try:
             ydl_opts = {
                 'format': '18/best[ext=mp4]',
@@ -83,35 +78,31 @@ def auto_reply(message):
                 'noplaylist': True,
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
             }
-
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
-
-            bot.reply_to(message, "Download complete! Uploading... 🚀")
-
+            bot.reply_to(message, "Uploading... 🚀")
             video_file = open('video.mp4', 'rb')
             bot.send_video(message.chat.id, video_file, timeout=60)
             video_file.close()
-            
             os.remove('video.mp4')
-            
         except Exception as e:
-            bot.reply_to(message, "Download fail ho gaya. Error: " + str(e))
-            print("Error:", e)
+            bot.reply_to(message, "Download fail. Error: " + str(e))
 
-    # --- Fun Replies ---
-    elif "kaise ho" in user_text:
-        bot.reply_to(message, "Main code hu, hamesha badhiya!")
-        
-    elif "python" in user_text:
-        bot.reply_to(message, "Python meri favorite language hai!")
-
-    # --- Else (Default) ---
+    # --- AI BRAIN (Agar kuch match na ho, to Google se pucho) ---
     else:
-        bot.reply_to(message, "Mujhe abhi iska jawab nahi pata, par tumne kaha: " + message.text)
+        # User ko batao ki AI soch raha hai
+        bot.send_chat_action(message.chat.id, 'typing')
+        
+        try:
+            # Google Gemini ko message bhejo
+            response = model.generate_content(message.text)
+            # Jawab wapas user ko bhejo
+            bot.reply_to(message, response.text)
+        except Exception as e:
+            bot.reply_to(message, "Sorry, AI abhi busy hai. Error: " + str(e))
 
 
-# --- 3. FAKE SERVER FOR RENDER (Keep Alive) ---
+# --- 3. FAKE SERVER FOR RENDER ---
 app = Flask(__name__)
 
 @app.route('/')
@@ -128,6 +119,5 @@ def keep_alive():
 
 # --- 4. EXECUTION ---
 print("Bot start ho raha hai...")
-keep_alive()  # <--- Ye line engine start karegi (Most Important)
+keep_alive()
 bot.infinity_polling()
-
